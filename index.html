@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termômetro Escolar</title>
+    
+    <!-- Tailwind CSS (Estilos) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase (Versão Compatibilidade para HTML) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- React e ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (Compilador JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-50 antialiased text-gray-900">
+    
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // 1. CONFIGURAÇÃO DO SEU FIREBASE (Colada exatamente como você enviou)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBEVkGCELSd-wrIyVdred3chPV9mFv5YUY",
+            authDomain: "termometo-palmyra.firebaseapp.com",
+            projectId: "termometo-palmyra",
+            storageBucket: "termometo-palmyra.firebasestorage.app",
+            messagingSenderId: "593296611346",
+            appId: "1:593296611346:web:1b39bfe8c67b69ca5ee0cb"
+        };
+
+        // Inicializa o Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. COMPONENTE DE ÍCONES (Substituindo dependências externas)
+        const Icon = ({ name, className = "w-5 h-5" }) => {
+            const icons = {
+                refresh: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />,
+                users: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />,
+                check: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />,
+                settings: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />,
+                arrowLeft: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />,
+                logout: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />,
+                plus: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />,
+                minus: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />,
+                trash: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
+                key: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />,
+                edit: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            };
+            return (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {icons[name] || icons.settings}
+                </svg>
+            );
+        };
+
+        // 3. APLICATIVO PRINCIPAL
+        const App = () => {
+            const [user, setUser] = React.useState(null);
+            const [classes, setClasses] = React.useState([]);
+            const [config, setConfig] = React.useState({ adminPassword: 'admin', teacherPins: ['1234'] });
+            
+            const [currentView, setCurrentView] = React.useState('home');
+            const [authError, setAuthError] = React.useState('');
+            const [pinInput, setPinInput] = React.useState('');
+            const [isLoading, setIsLoading] = React.useState(true);
+
+            // Autenticação e Busca de Dados
+            React.useEffect(() => {
+                const init = async () => {
+                    try {
+                        await auth.signInAnonymously();
+                    } catch (error) {
+                        console.error("Erro auth:", error);
+                    }
+                };
+                init();
+
+                const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+                    setUser(currentUser);
+                    if (!currentUser) setIsLoading(true);
+                });
+
+                return () => unsubscribe();
+            }, []);
+
+            React.useEffect(() => {
+                if (!user) return;
+                setIsLoading(false);
+
+                const unsubscribeClasses = db.collection('classes').onSnapshot((snapshot) => {
+                    const classesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    classesData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                    setClasses(classesData);
+                });
+
+                const unsubscribeConfig = db.collection('config').doc('settings').onSnapshot((docSnap) => {
+                    if (docSnap.exists) {
+                        setConfig(docSnap.data());
+                    } else {
+                        db.collection('config').doc('settings').set({ adminPassword: 'admin', teacherPins: ['1234'] });
+                    }
+                });
+
+                return () => {
+                    unsubscribeClasses();
+                    unsubscribeConfig();
+                };
+            }, [user]);
+
+            const updateScore = async (classId, newScore, maxScore = 30) => {
+                if (!user) return;
+                const validScore = Math.min(Math.max(0, newScore), maxScore);
+                try {
+                    await db.collection('classes').doc(classId).update({ score: validScore });
+                } catch (error) { console.error("Erro atualizar:", error); }
+            };
+
+            // --- TELAS ---
+            const Thermometer = ({ classData }) => {
+                const { name, score = 0, maxScore = 30 } = classData;
+                const percentage = Math.min(100, Math.max(0, (score / maxScore) * 100));
+                
+                let colorClass = "bg-red-500";
+                let statusText = "Podemos melhorar";
+                
+                if (percentage >= 33.33 && percentage < 66.66) {
+                    colorClass = "bg-yellow-400";
+                    statusText = "Aceitável";
+                } else if (percentage >= 66.66) {
+                    colorClass = "bg-green-500";
+                    statusText = "Excelente";
+                }
+
+                return (
+                    <div className="flex flex-col items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <h3 className="text-xl font-bold text-gray-800 mb-6 truncate w-full text-center">{name}</h3>
+                        <div className="flex h-64">
+                            <div className="flex flex-col justify-between h-full py-2 pr-4 text-xs font-semibold text-right text-gray-400">
+                                <span className={percentage >= 66.66 ? "text-green-500" : ""}>Excelente</span>
+                                <span className={percentage >= 33.33 && percentage < 66.66 ? "text-yellow-500" : ""}>Aceitável</span>
+                                <span className={percentage < 33.33 ? "text-red-500" : ""}>Melhorar</span>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <div className="relative w-10 h-full bg-gray-100 rounded-t-full border-4 border-b-0 border-gray-200 overflow-hidden flex flex-col justify-end">
+                                    <div className="absolute top-[33.33%] w-full border-b-2 border-gray-200 z-10 border-dashed"></div>
+                                    <div className="absolute top-[66.66%] w-full border-b-2 border-gray-200 z-10 border-dashed"></div>
+                                    <div className={`w-full transition-all duration-700 ease-out ${colorClass}`} style={{ height: `${percentage}%` }}></div>
+                                </div>
+                                <div className={`w-14 h-14 rounded-full border-4 border-gray-200 -mt-4 z-20 transition-colors duration-700 ${colorClass}`}></div>
+                            </div>
+                        </div>
+                        <div className="mt-6 text-center">
+                            <p className="text-3xl font-black text-gray-800">{score}</p>
+                            <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mt-1">{statusText}</p>
+                        </div>
+                    </div>
+                );
+            };
+
+            const HomeView = () => (
+                <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                    <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 space-y-6 text-center">
+                        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Icon name="refresh" className="w-10 h-10 text-blue-600" />
+                        </div>
+                        <h1 className="text-3xl font-bold text-gray-800">Termômetro Escolar</h1>
+                        <p className="text-gray-500">Selecione seu perfil de acesso.</p>
+                        <div className="space-y-4 pt-6">
+                            <button onClick={() => setCurrentView('student')} className="w-full py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                                <Icon name="users" /> Visão das Turmas
+                            </button>
+                            <button onClick={() => { setPinInput(''); setAuthError(''); setCurrentView('teacherLogin'); }} className="w-full py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                                <Icon name="check" /> Lançar Pontos
+                            </button>
+                            <button onClick={() => { setPinInput(''); setAuthError(''); setCurrentView('adminLogin'); }} className="w-full py-4 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                                <Icon name="settings" /> Coordenação
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const LoginView = ({ role }) => {
+                const isAdmin = role === 'admin';
+                const handleLogin = (e) => {
+                    e.preventDefault();
+                    if (isAdmin) {
+                        pinInput === config.adminPassword ? setCurrentView('adminDashboard') : setAuthError('Senha incorreta.');
+                    } else {
+                        (config.teacherPins || []).includes(pinInput) ? setCurrentView('teacherDashboard') : setAuthError('PIN inválido.');
+                    }
+                };
+
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 relative">
+                            <button onClick={() => setCurrentView('home')} className="absolute top-6 left-6 text-gray-400 hover:text-gray-800">
+                                <Icon name="arrowLeft" />
+                            </button>
+                            <div className="text-center mt-4 mb-8">
+                                <h2 className="text-2xl font-bold text-gray-800">{isAdmin ? 'Acesso Coordenação' : 'Acesso Professor'}</h2>
+                                <p className="text-gray-500 mt-2">{isAdmin ? 'Digite a senha mestra' : 'Digite o seu PIN'}</p>
+                            </div>
+                            <form onSubmit={handleLogin} className="space-y-6">
+                                <div>
+                                    <input type={isAdmin ? "password" : "text"} value={pinInput} onChange={(e) => setPinInput(e.target.value)} placeholder={isAdmin ? "Senha da coordenação" : "PIN (ex: 1234)"} className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-xl tracking-widest" autoFocus />
+                                    {authError && <p className="text-red-500 text-sm mt-2 text-center">{authError}</p>}
+                                </div>
+                                <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-colors">Entrar</button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            };
+
+            const StudentDashboard = () => (
+                <div className="min-h-screen p-6 lg:p-12">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex justify-between items-center mb-10">
+                            <div><h1 className="text-3xl lg:text-4xl font-bold text-gray-900">Desempenho das Turmas</h1><p className="text-gray-500 mt-2 text-lg">Atualizado ao vivo</p></div>
+                            <button onClick={() => setCurrentView('home')} className="p-3 bg-white border border-gray-200 rounded-full hover:bg-gray-100 shadow-sm"><Icon name="logout" /></button>
+                        </div>
+                        {classes.length === 0 ? (
+                            <div className="text-center py-20 text-gray-400 text-lg">Aguardando turmas.</div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                                {classes.map(cls => <Thermometer key={cls.id} classData={cls} />)}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            const TeacherDashboard = () => (
+                <div className="min-h-screen p-6">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-2xl shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center"><Icon name="check" className="w-5 h-5 text-blue-600" /></div>
+                                <div><h1 className="text-xl font-bold text-gray-800">Painel do Professor</h1></div>
+                            </div>
+                            <button onClick={() => setCurrentView('home')} className="flex items-center gap-2 text-gray-500 hover:text-gray-800 font-medium px-4 py-2 bg-gray-100 rounded-lg">Sair <Icon name="logout" className="w-4 h-4"/></button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {classes.map(cls => (
+                                <div key={cls.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                                    <div className="flex-1 min-w-0 mr-4">
+                                        <h3 className="text-2xl font-bold text-gray-800 truncate">{cls.name}</h3>
+                                        <p className="text-gray-500 font-medium">Pontos: <span className="text-blue-600 text-xl font-black">{cls.score || 0}</span></p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <button onClick={() => updateScore(cls.id, (cls.score || 0) - 1, cls.maxScore)} className="w-14 h-14 bg-red-50 hover:bg-red-100 text-red-600 rounded-full flex items-center justify-center border border-red-200"><Icon name="minus" className="w-6 h-6" /></button>
+                                        <button onClick={() => updateScore(cls.id, (cls.score || 0) + 1, cls.maxScore)} className="w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg"><Icon name="plus" className="w-8 h-8" /></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const AdminDashboard = () => {
+                const [newClassName, setNewClassName] = React.useState('');
+                const [newPin, setNewPin] = React.useState('');
+                const [newAdminPass, setNewAdminPass] = React.useState('');
+                const [isEditingPass, setIsEditingPass] = React.useState(false);
+
+                const handleAddClass = async (e) => {
+                    e.preventDefault();
+                    if (!newClassName.trim() || !user) return;
+                    await db.collection('classes').add({ name: newClassName.toUpperCase(), score: 15, maxScore: 30 });
+                    setNewClassName('');
+                };
+                const handleDeleteClass = async (classId) => {
+                    if (confirm('Apagar esta turma?')) await db.collection('classes').doc(classId).delete();
+                };
+                const handleResetAll = () => {
+                    if (confirm('Zerar todas as turmas?')) classes.forEach(cls => updateScore(cls.id, 0, cls.maxScore));
+                };
+
+                const handleAddPin = async (e) => {
+                    e.preventDefault();
+                    if (!newPin.trim() || !user) return;
+                    const currentPins = config.teacherPins || [];
+                    if (!currentPins.includes(newPin)) {
+                        await db.collection('config').doc('settings').update({ teacherPins: [...currentPins, newPin] });
+                        setNewPin('');
+                    }
+                };
+                const handleRemovePin = async (pinToRemove) => {
+                    const updatedPins = (config.teacherPins || []).filter(p => p !== pinToRemove);
+                    await db.collection('config').doc('settings').update({ teacherPins: updatedPins });
+                };
+                const handleUpdateAdminPass = async (e) => {
+                    e.preventDefault();
+                    if (!newAdminPass.trim() || !user) return;
+                    await db.collection('config').doc('settings').update({ adminPassword: newAdminPass });
+                    setNewAdminPass('');
+                    setIsEditingPass(false);
+                    alert('Senha alterada!');
+                };
+
+                return (
+                    <div className="min-h-screen p-6">
+                        <div className="max-w-6xl mx-auto space-y-6">
+                            <div className="flex justify-between items-center bg-gray-900 p-6 rounded-2xl text-white shadow-lg">
+                                <div className="flex items-center gap-4"><Icon name="settings" className="w-8 h-8 text-blue-400" /><div><h1 className="text-2xl font-bold">Coordenação</h1></div></div>
+                                <button onClick={() => setCurrentView('home')} className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg">Sair <Icon name="logout" className="w-4 h-4" /></button>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-xl font-bold flex items-center gap-2"><Icon name="users" className="text-gray-400"/> Turmas</h2>
+                                        <button onClick={handleResetAll} className="flex items-center gap-2 text-red-600 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg text-sm font-semibold"><Icon name="refresh" className="w-4 h-4"/> Zerar Todos</button>
+                                    </div>
+                                    <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">
+                                        {classes.map(cls => (
+                                            <div key={cls.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border">
+                                                <span className="font-bold text-lg text-gray-700">{cls.name}</span>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 font-bold uppercase">PT:</label><input type="number" value={cls.score || 0} onChange={(e) => updateScore(cls.id, parseInt(e.target.value) || 0, cls.maxScore)} className="w-20 text-center font-bold text-lg border rounded-md py-1" /></div>
+                                                    <button onClick={() => handleDeleteClass(cls.id)} className="text-gray-400 hover:text-red-500"><Icon name="trash" /></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <form onSubmit={handleAddClass} className="flex gap-2">
+                                        <input type="text" placeholder="Nome da Turma" value={newClassName} onChange={(e) => setNewClassName(e.target.value)} className="flex-1 px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                                        <button type="submit" className="bg-gray-900 text-white px-6 rounded-xl font-bold">Adicionar</button>
+                                    </form>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="bg-white p-6 rounded-2xl shadow-sm border">
+                                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Icon name="key" className="text-blue-600"/> PINs (Professores)</h2>
+                                        <div className="space-y-2 mb-4">
+                                            {(config.teacherPins || []).map(pin => (
+                                                <div key={pin} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                                    <span className="font-mono text-lg font-bold tracking-widest text-blue-800">{pin}</span>
+                                                    <button onClick={() => handleRemovePin(pin)} className="text-blue-400 hover:text-red-500"><Icon name="trash" className="w-4 h-4"/></button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <form onSubmit={handleAddPin} className="flex gap-2">
+                                            <input type="text" placeholder="Novo PIN" value={newPin} onChange={(e) => setNewPin(e.target.value)} className="flex-1 px-4 py-2 bg-gray-50 border rounded-lg font-mono" />
+                                            <button type="submit" className="bg-blue-600 text-white px-4 rounded-lg"><Icon name="plus" /></button>
+                                        </form>
+                                    </div>
+
+                                    <div className="bg-gray-900 p-6 rounded-2xl shadow-sm text-white">
+                                        <h2 className="text-lg font-bold mb-2">Senha da Coordenação</h2>
+                                        {isEditingPass ? (
+                                            <form onSubmit={handleUpdateAdminPass} className="space-y-3 mt-4">
+                                                <input type="text" value={newAdminPass} onChange={(e) => setNewAdminPass(e.target.value)} className="w-full px-4 py-2 bg-gray-800 border-gray-700 rounded-lg text-white" />
+                                                <div className="flex gap-2">
+                                                    <button type="submit" className="flex-1 bg-blue-600 py-2 rounded-lg font-bold text-sm">Salvar</button>
+                                                    <button type="button" onClick={() => setIsEditingPass(false)} className="px-4 bg-gray-800 py-2 rounded-lg font-bold text-sm">Cancelar</button>
+                                                </div>
+                                            </form>
+                                        ) : (
+                                            <div className="mt-4 flex items-center justify-between bg-gray-800 p-3 rounded-lg border border-gray-700">
+                                                <span className="font-mono text-gray-200">{config.adminPassword}</span>
+                                                <button onClick={() => setIsEditingPass(true)} className="text-gray-400 hover:text-white"><Icon name="edit" className="w-4 h-4"/></button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            if (isLoading) return <div className="min-h-screen flex items-center justify-center font-medium">Conectando ao banco de dados...</div>;
+
+            switch (currentView) {
+                case 'student': return <StudentDashboard />;
+                case 'teacherLogin': return <LoginView role="teacher" />;
+                case 'adminLogin': return <LoginView role="admin" />;
+                case 'teacherDashboard': return <TeacherDashboard />;
+                case 'adminDashboard': return <AdminDashboard />;
+                default: return <HomeView />;
+            }
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
